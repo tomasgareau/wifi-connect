@@ -205,7 +205,14 @@ impl NetworkCommandHandler {
     fn activate(&mut self) -> ExitResult {
         self.activated = true;
 
-        let networks = get_networks(&self.access_points);
+        let _ = wifiscanner::scan();
+        self.access_points = get_access_points(&self.device)?;
+
+        let networks = {
+            let mut networks = get_networks(&self.access_points);
+            networks.retain(|network| network.ssid != self.config.ssid);
+            networks
+        }; // discard mut
 
         self.server_tx
             .send(NetworkCommandResponse::Networks(networks))
